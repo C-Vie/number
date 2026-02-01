@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20以内进位退位加减法练习</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // 靛蓝色作为主色调，代表智慧和专注
+                        secondary: '#10B981', // 绿色作为辅助色，代表进步和成长
+                        accent: '#F59E0B', // 橙色作为强调色，增加活力
+                        neutral: '#F3F4F6', // 浅灰色作为中性色
+                        'neutral-dark': '#9CA3AF', // 深灰色用于文本
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-short': 'bounce 0.5s ease-in-out 2',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+            .card-shadow {
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            }
+            .btn-hover {
+                transition: all 0.3s ease;
+            }
+            .btn-hover:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            }
+            .btn-correct {
+                background-color: #10B981;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            }
+            .btn-incorrect {
+                background-color: #EF4444;
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            }
+            .input-focus {
+                transition: all 0.3s ease;
+            }
+            .input-focus:focus {
+                border-color: #4F46E5;
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 顶部信息卡片 -->
+        <div class="bg-white rounded-xl p-6 mb-6 card-shadow glass-effect animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-2">20以内进位退位加减法练习</h1>
+                    <p class="text-neutral-dark" id="current-date">2023年7月21日 星期一</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex items-center">
+                    <div class="bg-neutral rounded-full px-4 py-2 mr-4">
+                        <span class="text-sm text-neutral-dark">今日进度</span>
+                        <div class="flex items-center mt-1">
+                            <span id="progress-text" class="text-lg font-bold text-primary">0/30</span>
+                            <div class="w-32 h-2 bg-gray-200 rounded-full ml-3">
+                                <div id="progress-bar" class="h-2 bg-secondary rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="show-stats-btn" class="bg-accent hover:bg-amber-500 text-white rounded-full px-4 py-2 flex items-center btn-hover">
+                        <i class="fa fa-bar-chart mr-2"></i>
+                        <span>查看统计</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 题目卡片 -->
+        <div id="question-card" class="bg-white rounded-xl p-6 mb-6 card-shadow glass-effect animate-fade-in">
+            <div class="flex flex-col items-center">
+                <div class="text-4xl md:text-5xl font-bold mb-8 text-center" id="question-text">
+                    8 + 7 = ?
+                </div>
+                <div class="flex items-center w-full max-w-md">
+                    <input type="number" id="answer-input" class="w-full text-2xl border-2 border-gray-300 rounded-lg px-4 py-3 input-focus text-center" placeholder="请输入答案" autofocus>
+                    <button id="submit-btn" class="bg-primary hover:bg-indigo-600 text-white rounded-lg px-6 py-3 ml-3 btn-hover text-lg font-medium">
+                        提交
+                    </button>
+                </div>
+                <div id="feedback-message" class="mt-4 text-lg font-medium hidden"></div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="flex flex-wrap justify-center gap-4 mb-6">
+            <button id="show-wrong-btn" class="bg-neutral hover:bg-gray-200 text-neutral-dark rounded-lg px-6 py-3 btn-hover">
+                <i class="fa fa-exclamation-triangle mr-2"></i>
+                错题回顾
+            </button>
+        </div>
+
+        <!-- 错题展示区域 -->
+        <div id="wrong-questions-section" class="bg-white rounded-xl p-6 mb-6 card-shadow glass-effect hidden animate-fade-in">
+            <h2 class="text-xl font-bold text-primary mb-4">错题回顾</h2>
+            <div id="wrong-questions-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 错题将在这里动态添加 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计图表模态框 -->
+    <div id="stats-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary">学习统计</h2>
+                <button id="close-stats-btn" class="text-neutral-dark hover:text-gray-700 text-2xl">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-3">最近7天正确率</h3>
+                <div class="bg-neutral rounded-lg p-4">
+                    <canvas id="accuracy-chart" height="200"></canvas>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-neutral rounded-lg p-4 text-center">
+                    <h4 class="text-neutral-dark mb-2">总练习天数</h4>
+                    <p id="total-days" class="text-3xl font-bold text-primary">0</p>
+                </div>
+                <div class="bg-neutral rounded-lg p-4 text-center">
+                    <h4 class="text-neutral-dark mb-2">最佳正确率</h4>
+                    <p id="best-accuracy" class="text-3xl font-bold text-secondary">0%</p>
+                </div>
+                <div class="bg-neutral rounded-lg p-4 text-center">
+                    <h4 class="text-neutral-dark mb-2">总答题数</h4>
+                    <p id="total-questions" class="text-3xl font-bold text-accent">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 反馈提示 -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg px-6 py-3 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center">
+        <i id="toast-icon" class="fa fa-check-circle text-secondary mr-3 text-xl"></i>
+        <span id="toast-message">操作成功</span>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentQuestions = []; // 当前题目列表
+        let currentQuestionIndex = 0; // 当前题目索引
+        let userAnswers = []; // 用户答案
+        let wrongQuestions = []; // 错题记录
+        let todayStats = { correct: 0, total: 0 }; // 今日统计
+        let historyStats = []; // 历史统计数据
+        let currentDate = new Date(); // 当前日期
+        let todayDateStr = formatDate(currentDate); // 格式化的今日日期字符串
+
+        // 初始化函数
+        function init() {
+            // 设置当前日期
+            document.getElementById('current-date').textContent = formatDateWithWeekday(currentDate);
+            
+            // 加载本地存储的数据
+            loadData();
+            
+            // 检查是否需要生成新题目
+            checkAndGenerateQuestions();
+            
+            // 更新UI
+            updateUI();
+            
+            // 绑定事件
+            bindEvents();
+        }
+
+        // 格式化日期为 YYYY-MM-DD
+        function formatDate(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // 格式化日期为中文格式，包含星期
+        function formatDateWithWeekday(date) {
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
+        }
+
+        // 加载本地存储的数据
+        function loadData() {
+            // 加载用户答案
+            const savedAnswers = localStorage.getItem(`mathPractice_answers_${todayDateStr}`);
+            if (savedAnswers) {
+                userAnswers = JSON.parse(savedAnswers);
+            }
+            
+            // 加载错题记录
+            const savedWrongQuestions = localStorage.getItem(`mathPractice_wrong_${todayDateStr}`);
+            if (savedWrongQuestions) {
+                wrongQuestions = JSON.parse(savedWrongQuestions);
+            }
+            
+            // 加载今日统计
+            const savedTodayStats = localStorage.getItem(`mathPractice_stats_${todayDateStr}`);
+            if (savedTodayStats) {
+                todayStats = JSON.parse(savedTodayStats);
+            }
+            
+            // 加载历史统计
+            const savedHistoryStats = localStorage.getItem('mathPractice_historyStats');
+            if (savedHistoryStats) {
+                historyStats = JSON.parse(savedHistoryStats);
+            }
+            
+            // 加载上次练习日期
+            const lastPracticeDate = localStorage.getItem('mathPractice_lastDate');
+            
+            // 如果是新的一天，重置数据
+            if (lastPracticeDate !== todayDateStr) {
+                // 保存昨天的统计到历史记录
+                if (lastPracticeDate) {
+                    const yesterdayStats = localStorage.getItem(`mathPractice_stats_${lastPracticeDate}`);
+                    if (yesterdayStats) {
+                        const stats = JSON.parse(yesterdayStats);
+                        // 只保存完成率超过30%的日期的统计
+                        if (stats.total >= 10) {
+                            historyStats.push({
+                                date: lastPracticeDate,
+                                correct: stats.correct,
+                                total: stats.total,
+                                accuracy: Math.round((stats.correct / stats.total) * 100)
+                            });
+                            
+                            // 只保留最近30天的记录
+                            if (historyStats.length > 30) {
+                                historyStats.shift();
+                            }
+                            
+                            // 保存更新后的历史记录
+                            localStorage.setItem('mathPractice_historyStats', JSON.stringify(historyStats));
+                        }
+                    }
+                }
+                
+                // 重置今日数据
+                userAnswers = [];
+                wrongQuestions = [];
+                todayStats = { correct: 0, total: 0 };
+                
+                // 更新最后练习日期
+                localStorage.setItem('mathPractice_lastDate', todayDateStr);
+            }
+        }
+
+        // 检查是否需要生成新题目
+        function checkAndGenerateQuestions() {
+            // 尝试从本地存储加载今日题目
+            const savedQuestions = localStorage.getItem(`mathPractice_questions_${todayDateStr}`);
+            
+            if (savedQuestions) {
+                currentQuestions = JSON.parse(savedQuestions);
+            } else {
+                // 生成新题目
+                currentQuestions = generateQuestions();
+                
+                // 保存题目到本地存储
+                localStorage.setItem(`mathPractice_questions_${todayDateStr}`, JSON.stringify(currentQuestions));
+            }
+            
+            // 找到当前应该显示的题目索引
+            currentQuestionIndex = userAnswers.length;
+        }
+
+        // 生成30道20以内进位退位加减法题目
+        function generateQuestions() {
+            const questions = [];
+            const operators = ['+', '-'];
+            
+            // 生成15道加法题（其中包含进位加法）
+            for (let i = 0; i < 15; i++) {
+                let num1, num2;
+                
+                // 确保是进位加法
+                if (i < 10) {
+                    // 生成进位加法题 (结果 > 10)
+                    num1 = Math.floor(Math.random() * 9) + 2; // 2-10
+                    num2 = Math.floor(Math.random() * (10 - num1 + 1)) + (10 - num1); // 确保 num1 + num2 >= 10
+                } else {
+                    // 生成普通加法题
+                    num1 = Math.floor(Math.random() * 10) + 1; // 1-10
+                    num2 = Math.floor(Math.random() * 10) + 1; // 1-10
+                }
+                
+                const answer = num1 + num2;
+                questions.push({
+                    id: `q${i+1}`,
+                    text: `${num1} + ${num2} = ?`,
+                    answer: answer,
+                    type: 'addition'
+                });
+            }
+            
+            // 生成15道减法题（其中包含退位减法）
+            for (let i = 15; i < 30; i++) {
+                let num1, num2;
+                
+                // 确保是退位减法
+                if (i < 25) {
+                    // 生成退位减法题 (个位数不够减)
+                    num1 = Math.floor(Math.random() * 9) + 11; // 11-19
+                    const onesDigit1 = num1 % 10;
+                    num2 = Math.floor(Math.random() * onesDigit1) + (10 - onesDigit1 + 1); // 确保是退位减法
+                } else {
+                    // 生成普通减法题
+                    num1 = Math.floor(Math.random() * 10) + 11; // 11-20
+                    num2 = Math.floor(Math.random() * num1) + 1; // 1-num1
+                }
+                
+                const answer = num1 - num2;
+                questions.push({
+                    id: `q${i+1}`,
+                    text: `${num1} - ${num2} = ?`,
+                    answer: answer,
+                    type: 'subtraction'
+                });
+            }
+            
+            // 随机打乱题目顺序
+            return shuffleArray(questions);
+        }
+
+        // 随机打乱数组
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 更新UI
+        function updateUI() {
+            // 更新进度
+            document.getElementById('progress-text').textContent = `${userAnswers.length}/30`;
+            document.getElementById('progress-bar').style.width = `${(userAnswers.length / 30) * 100}%`;
+            
+            // 如果还有未做的题目，显示当前题目
+            if (currentQuestionIndex < currentQuestions.length) {
+                document.getElementById('question-text').textContent = currentQuestions[currentQuestionIndex].text;
+                document.getElementById('answer-input').value = '';
+                document.getElementById('answer-input').focus();
+                document.getElementById('feedback-message').classList.add('hidden');
+            } else {
+                // 所有题目都已完成
+                document.getElementById('question-text').textContent = '🎉 今日练习完成！';
+                document.getElementById('answer-input').classList.add('hidden');
+                document.getElementById('submit-btn').classList.add('hidden');
+                
+                const feedbackMessage = document.getElementById('feedback-message');
+                feedbackMessage.textContent = `正确率: ${Math.round((todayStats.correct / todayStats.total) * 100)}% (${todayStats.correct}/${todayStats.total})`;
+                feedbackMessage.className = 'mt-4 text-lg font-medium text-secondary';
+                feedbackMessage.classList.remove('hidden');
+            }
+            
+            // 更新错题列表
+            updateWrongQuestionsList();
+        }
+
+        // 更新错题列表
+        function updateWrongQuestionsList() {
+            const wrongQuestionsList = document.getElementById('wrong-questions-list');
+            wrongQuestionsList.innerHTML = '';
+            
+            if (wrongQuestions.length === 0) {
+                wrongQuestionsList.innerHTML = '<p class="text-neutral-dark col-span-2 text-center py-4">暂无错题记录</p>';
+                return;
+            }
+            
+            wrongQuestions.forEach((wrongQ, index) => {
+                const question = currentQuestions.find(q => q.id === wrongQ.id);
+                if (question) {
+                    const wrongItem = document.createElement('div');
+                    wrongItem.className = 'bg-neutral rounded-lg p-4 flex items-center justify-between';
+                    wrongItem.innerHTML = `
+                        <div>
+                            <p class="font-medium">${question.text}</p>
+                            <p class="text-sm text-red-500">你的答案: ${wrongQ.userAnswer}</p>
+                        </div>
+                        <p class="text-lg font-bold text-secondary">正确答案: ${question.answer}</p>
+                    `;
+                    wrongQuestionsList.appendChild(wrongItem);
+                }
+            });
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 提交答案
+            document.getElementById('submit-btn').addEventListener('click', submitAnswer);
+            document.getElementById('answer-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitAnswer();
+                }
+            });
+            
+
+            
+            // 显示/隐藏错题
+            document.getElementById('show-wrong-btn').addEventListener('click', toggleWrongQuestions);
+            
+
+            
+            // 显示/隐藏统计模态框
+            document.getElementById('show-stats-btn').addEventListener('click', showStatsModal);
+            document.getElementById('close-stats-btn').addEventListener('click', hideStatsModal);
+            
+            // 点击模态框背景关闭
+            document.getElementById('stats-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideStatsModal();
+                }
+            });
+        }
+
+        // 提交答案
+        function submitAnswer() {
+            const answerInput = document.getElementById('answer-input');
+            const userAnswer = parseInt(answerInput.value);
+            
+            // 验证输入
+            if (isNaN(userAnswer)) {
+                showToast('请输入有效的数字', 'error');
+                answerInput.focus();
+                return;
+            }
+            
+            // 获取当前题目
+            const currentQuestion = currentQuestions[currentQuestionIndex];
+            const isCorrect = userAnswer === currentQuestion.answer;
+            
+            // 记录答案
+            userAnswers.push({
+                id: currentQuestion.id,
+                userAnswer: userAnswer,
+                isCorrect: isCorrect,
+                timestamp: new Date().toISOString()
+            });
+            
+            // 更新统计
+            todayStats.total++;
+            if (isCorrect) {
+                todayStats.correct++;
+            } else {
+                // 添加到错题集
+                wrongQuestions.push({
+                    id: currentQuestion.id,
+                    userAnswer: userAnswer,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // 保存数据
+            saveData();
+            
+            // 显示短暂反馈
+            showToast(isCorrect ? '✅ 回答正确！' : `❌ 回答错误！正确答案是 ${currentQuestion.answer}`, isCorrect ? 'success' : 'error');
+            
+            // 直接进入下一题
+            nextQuestion();
+        }
+
+
+
+        // 进入下一题
+        function nextQuestion() {
+            currentQuestionIndex++;
+            updateUI();
+        }
+
+        // 切换显示/隐藏错题列表
+        function toggleWrongQuestions() {
+            const wrongQuestionsSection = document.getElementById('wrong-questions-section');
+            const showWrongBtn = document.getElementById('show-wrong-btn');
+            
+            if (wrongQuestionsSection.classList.contains('hidden')) {
+                wrongQuestionsSection.classList.remove('hidden');
+                showWrongBtn.innerHTML = '<i class="fa fa-times mr-2"></i>隐藏错题';
+                showWrongBtn.className = 'bg-red-500 hover:bg-red-600 text-white rounded-lg px-6 py-3 btn-hover';
+            } else {
+                wrongQuestionsSection.classList.add('hidden');
+                showWrongBtn.innerHTML = '<i class="fa fa-exclamation-triangle mr-2"></i>错题回顾';
+                showWrongBtn.className = 'bg-neutral hover:bg-gray-200 text-neutral-dark rounded-lg px-6 py-3 btn-hover';
+            }
+        }
+
+
+
+        // 保存数据到本地存储
+        function saveData() {
+            localStorage.setItem(`mathPractice_answers_${todayDateStr}`, JSON.stringify(userAnswers));
+            localStorage.setItem(`mathPractice_wrong_${todayDateStr}`, JSON.stringify(wrongQuestions));
+            localStorage.setItem(`mathPractice_stats_${todayDateStr}`, JSON.stringify(todayStats));
+        }
+
+        // 显示统计模态框
+        function showStatsModal() {
+            const statsModal = document.getElementById('stats-modal');
+            statsModal.classList.remove('hidden');
+            
+            // 更新统计数据
+            updateStatsData();
+            
+            // 创建图表
+            createAccuracyChart();
+        }
+
+        // 隐藏统计模态框
+        function hideStatsModal() {
+            document.getElementById('stats-modal').classList.add('hidden');
+        }
+
+        // 更新统计数据
+        function updateStatsData() {
+            // 总练习天数
+            const uniqueDates = new Set();
+            historyStats.forEach(stat => uniqueDates.add(stat.date));
+            
+            // 如果今天有练习，也计入总天数
+            if (todayStats.total > 0) {
+                uniqueDates.add(todayDateStr);
+            }
+            
+            document.getElementById('total-days').textContent = uniqueDates.size;
+            
+            // 最佳正确率
+            let bestAccuracy = 0;
+            historyStats.forEach(stat => {
+                if (stat.accuracy > bestAccuracy) {
+                    bestAccuracy = stat.accuracy;
+                }
+            });
+            
+            // 如果今天的正确率更高，更新最佳正确率
+            if (todayStats.total > 0) {
+                const todayAccuracy = Math.round((todayStats.correct / todayStats.total) * 100);
+                if (todayAccuracy > bestAccuracy) {
+                    bestAccuracy = todayAccuracy;
+                }
+            }
+            
+            document.getElementById('best-accuracy').textContent = `${bestAccuracy}%`;
+            
+            // 总答题数
+            let totalQuestions = 0;
+            historyStats.forEach(stat => {
+                totalQuestions += stat.total;
+            });
+            totalQuestions += todayStats.total;
+            
+            document.getElementById('total-questions').textContent = totalQuestions;
+        }
+
+        // 创建正确率图表
+        function createAccuracyChart() {
+            const ctx = document.getElementById('accuracy-chart').getContext('2d');
+            
+            // 获取最近7天的数据
+            const last7Days = [];
+            const today = new Date();
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = formatDate(date);
+                
+                // 查找历史记录中是否有这一天的数据
+                const dayData = historyStats.find(stat => stat.date === dateStr);
+                
+                if (dayData) {
+                    last7Days.push({
+                        date: formatShortDate(date),
+                        accuracy: dayData.accuracy
+                    });
+                } else if (dateStr === todayDateStr) {
+                    // 如果是今天，使用今天的数据
+                    const accuracy = todayStats.total > 0 ? Math.round((todayStats.correct / todayStats.total) * 100) : 0;
+                    last7Days.push({
+                        date: formatShortDate(date),
+                        accuracy: accuracy
+                    });
+                } else {
+                    // 没有数据的日期
+                    last7Days.push({
+                        date: formatShortDate(date),
+                        accuracy: null
+                    });
+                }
+            }
+            
+            // 销毁旧图表
+            if (window.accuracyChart) {
+                window.accuracyChart.destroy();
+            }
+            
+            // 创建新图表
+            window.accuracyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last7Days.map(day => day.date),
+                    datasets: [{
+                        label: '正确率 (%)',
+                        data: last7Days.map(day => day.accuracy),
+                        borderColor: '#4F46E5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: function(context) {
+                            const value = context.dataset.data[context.dataIndex];
+                            return value === null ? '#9CA3AF' : (value >= 80 ? '#10B981' : (value >= 60 ? '#F59E0B' : '#EF4444'));
+                        },
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    return value === null ? '未练习' : `正确率: ${value}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 格式化日期为短格式 (MM/DD)
+        function formatShortDate(date) {
+            return `${date.getMonth() + 1}/${date.getDate()}`;
+        }
+
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            
+            // 设置消息内容
+            toastMessage.textContent = message;
+            
+            // 设置图标和颜色
+            if (type === 'success') {
+                toastIcon.className = 'fa fa-check-circle text-secondary mr-3 text-xl';
+                toast.className = 'fixed bottom-6 right-6 bg-white rounded-lg shadow-lg px-6 py-3 transform transition-all duration-300 flex items-center';
+            } else if (type === 'error') {
+                toastIcon.className = 'fa fa-times-circle text-red-500 mr-3 text-xl';
+                toast.className = 'fixed bottom-6 right-6 bg-white rounded-lg shadow-lg px-6 py-3 transform transition-all duration-300 flex items-center';
+            } else if (type === 'info') {
+                toastIcon.className = 'fa fa-info-circle text-primary mr-3 text-xl';
+                toast.className = 'fixed bottom-6 right-6 bg-white rounded-lg shadow-lg px-6 py-3 transform transition-all duration-300 flex items-center';
+            }
+            
+            // 显示提示
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            // 3秒后隐藏
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
